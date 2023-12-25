@@ -5,12 +5,16 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.manasvi.mindmatchpro.models.BoardSize
+import com.manasvi.mindmatchpro.utils.DEFAULT_ICONS
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var rvBoard: RecyclerView
     private lateinit var tvNumMoves: TextView
     private lateinit var tvNumPairs: TextView
+
+    private var boardSize = BoardSize.HARD
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -19,10 +23,12 @@ class MainActivity : AppCompatActivity() {
         tvNumMoves = findViewById(R.id.tvNumMoves)
         tvNumPairs = findViewById(R.id.tvNumPairs)
 
-        rvBoard.adapter = MemoryBoardAdapter(this, 8)
-        rvBoard.setHasFixedSize(true)
-        rvBoard.layoutManager = GridLayoutManager(this, 2)
+        val chosenImage: List<Int> = DEFAULT_ICONS.shuffled().take(boardSize.getNumPairs())
+        val randomizedImages : List<Int> = (chosenImage+chosenImage).shuffled()
 
+        rvBoard.adapter = MemoryBoardAdapter(this, boardSize,randomizedImages)
+        rvBoard.setHasFixedSize(true)
+        rvBoard.layoutManager = GridLayoutManager(this, boardSize.getWidth())
 
     }
 }

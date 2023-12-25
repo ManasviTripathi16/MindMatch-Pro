@@ -8,9 +8,14 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
+import com.manasvi.mindmatchpro.models.BoardSize
 import java.lang.Integer.min
 
-class MemoryBoardAdapter(private val context: Context, private val numPieces: Int) :
+class MemoryBoardAdapter(
+    private val context: Context,
+    private val boardSize: BoardSize,
+    private val cardImages: List<Int>
+) :
     RecyclerView.Adapter<MemoryBoardAdapter.ViewHolder>() {
 
     companion object {
@@ -19,14 +24,14 @@ class MemoryBoardAdapter(private val context: Context, private val numPieces: In
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
-        val cardWidth = parent.width / 2 - (2 * MARGIN_SIZE)
-        val cardHeight = parent.height / 4 - (2 * MARGIN_SIZE)
-        val cardSideLenght = min(cardWidth, cardHeight)
-        val view = LayoutInflater.from(context).inflate(R.layout.memory_card, parent, false)
+        val cardWidth = parent.width / boardSize.getWidth() - (2 * MARGIN_SIZE)
+        val cardHeight = parent.height / boardSize.getHeight() - (2 * MARGIN_SIZE)
+        val cardSideLength = min(cardWidth, cardHeight)
+        val view : View = LayoutInflater.from(context).inflate(R.layout.memory_card, parent, false)
         val layoutParams: ViewGroup.MarginLayoutParams =
             view.findViewById<CardView>(R.id.cardView).layoutParams as ViewGroup.MarginLayoutParams
-        layoutParams.width = cardSideLenght
-        layoutParams.height = cardSideLenght
+        layoutParams.width = cardSideLength
+        layoutParams.height = cardSideLength
         layoutParams.setMargins(MARGIN_SIZE, MARGIN_SIZE, MARGIN_SIZE, MARGIN_SIZE)
         return ViewHolder(view)
     }
@@ -35,12 +40,14 @@ class MemoryBoardAdapter(private val context: Context, private val numPieces: In
         holder.bind(position)
     }
 
-    override fun getItemCount() = numPieces
+    override fun getItemCount() = boardSize.numCards
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val imageButton = itemView.findViewById<ImageButton>(R.id.imagebutton)
         fun bind(position: Int) {
+
+            imageButton.setImageResource(cardImages[position])
 
             imageButton.setOnClickListener {
                 Log.i("MemoryBoard", "Clicked on position $position")
