@@ -4,8 +4,15 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
+import android.text.Editable
+import android.text.InputFilter
+import android.text.TextWatcher
 import android.util.Log
 import android.view.MenuItem
 import android.widget.Button
@@ -18,6 +25,7 @@ import com.manasvi.mindmatchpro.models.BoardSize
 import com.manasvi.mindmatchpro.utils.EXTRA_BOARD_SIZE
 import com.manasvi.mindmatchpro.utils.isPermissionGranted
 import com.manasvi.mindmatchpro.utils.requestPermission
+import java.io.ByteArrayOutputStream
 
 class CreateAcitvity : AppCompatActivity() {
 
@@ -51,6 +59,23 @@ class CreateAcitvity : AppCompatActivity() {
         boardSize = intent.getSerializableExtra(EXTRA_BOARD_SIZE) as BoardSize
         numImagesRequire = boardSize.getNumPairs()
         supportActionBar?.title = "Choose pictures (0 / $numImagesRequire) "
+
+        btnSave.setOnClickListener {
+            saveDataToFirebase()
+        }
+        etGameName.filters = arrayOf(InputFilter.LengthFilter(14))
+        etGameName.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                btnSave.isEnabled = shouldEnableSaveButton()
+            }
+
+        })
         adapter = ImagePickerAdapter(this,
             chosenImagesUris,
             boardSize,
@@ -73,6 +98,7 @@ class CreateAcitvity : AppCompatActivity() {
 
 
     }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
@@ -122,7 +148,39 @@ class CreateAcitvity : AppCompatActivity() {
 
     }
 
+    private fun saveDataToFirebase() {
+        Log.i("ERWY", "Storing to firebase")
+        for ((index, phtotUri) in chosenImagesUris.withIndex()) {
+            val imageByteArray = getImageByteArray(phtotUri)
+
+        }
+    }
+
+    private fun getImageByteArray(phtotUri: Uri): ByteArray {
+        val originalBitmap: Bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = ImageDecoder.createSource(contentResolver, phtotUri)
+            ImageDecoder.decodeBitmap(source)
+        } else {
+            MediaStore.Images.Media.getBitmap(contentResolver, phtotUri)
+        }
+        Log.i("YAYA", "Original width ${originalBitmap.width} and heigth ${originalBitmap.height} ")
+        val scaledBitmap = BitmapScaler.scaleToFitHeight(originalBitmap, 250)
+        Log.i("YAYA", "Scaled width ${scaledBitmap.width} and heigth ${scaledBitmap.height} ")
+        val byteOutputStream = ByteArrayOutputStream()
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 60, byteOutputStream)
+        return byteOutputStream.toByteArray()
+    }
+
+
     private fun shouldEnableSaveButton(): Boolean {
+
+        if (chosenImagesUris.size != numImagesRequire) {
+            return false
+        }
+
+        if (etGameName.text.isBlank() || etGameName.length() < 3) {
+            return false
+        }
 
         return true
 
@@ -144,4 +202,5 @@ class CreateAcitvity : AppCompatActivity() {
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         startActivityForResult(Intent.createChooser(intent, "Choose pictures"), PICK_PHOTOS_CODE)
     }
+
 }
